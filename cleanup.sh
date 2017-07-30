@@ -5,3 +5,4 @@
 DIR=$(dirname "$SCRIPT")
 
 sed -i -e 's/^PreviewPassword.*$/PreviewPassword = ""/' $DIR/backdrifting.rb
+find "${DIR}" -name "*-e" -exec rm {} \;
