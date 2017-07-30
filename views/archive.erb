@@ -1,0 +1,10 @@
+<link href="/styles/markdown.css" rel="stylesheet" type="text/css">
+<div class="markdown">
+<h2>Post Archive</h2>
+<p>
+<% for post in posts %>
+	<a href="/post/<%= post[0] %>"><%= post[1] %></a><br>	
+<% end %>
+</p>
+<p><a href="/allPosts">View all posts on one page</a></p>
+</div>
