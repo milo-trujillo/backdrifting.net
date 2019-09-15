@@ -4,32 +4,30 @@
 <meta charset="utf-8">
 <title>Backdrifting</title>
 <link href="/styles/style.css" rel="stylesheet" type="text/css">
-<link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,800,700' rel='stylesheet' type='text/css'>
+<link href='http://fonts.googleapis.com/css?family=Lora:400italic' rel='stylesheet' type='text/css'>
+<link href='http://fonts.googleapis.com/css?family=Lora:700' rel='stylesheet' type='text/css'>
+<link href='http://fonts.googleapis.com/css?family=Lora:700italic' rel='stylesheet' type='text/css'>
+<link href='http://fonts.googleapis.com/css?family=Lora' rel='stylesheet' type='text/css'>
+<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+<link rel="icon" type="image/png" sizes='246x246' href="/images/qr.png" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
 <body>
-<div class="container">
-	<div class="stage">
-		<div class="header">
+<div id="container">
+	<div id="stage">
+		<div id="header">
 			<center><img src="/images/backdrifting_header.jpg"></center>
 			<div class="header_wrapper">
-				<ul class="navlinks">
-				<li class="navlink"><a href="/">Home</a></li> -
-				<li class="navlink"><a href="/archive">Archive</a></li> -
-				<li class="navlink"><a href="/about">About</a></li> -
-				<li class="navlink"><a href="https://github.com/milo-trujillo">GitHub</a></li> -
-				<li class="navlink"><a href="/contact">Contact</a></li>
-				</ul>
+				<a href="/">Home</a> - <a href="/archive">Archive</a> - <a href="/about">About</a> - <a href="https://github.com/milo-trujillo">GitHub</a> - <a href="/contact">Contact</a>
 			</div>
 		</div>
-		<hr>
 		<a href="/rss"><img src="/share/rss.png" width=32px title="RSS" id="rss"></img></a>
-		<div class="stage-data">
+		<div id="stage-data">
 			<%= yield %>
 		</div>
-		<div class="footer"><footer>&#169; 2017 Milo Trujillo<br>Header image based on image from <a href="http://thecodelesscode.com/">TheCodelessCode</a>, under the <a href="https://creativecommons.org/licenses/by-nc/3.0/deed.en_US">CC BY-NC 3.0</a><br>Share buttons from <a href="http://iconsandcoffee.com/freebie-flat-web-icon-set/">iconsandcoffee.com</a></footer></div>
 	</div>
+	<div id="footer"><footer>&#169; 2018 Milo Trujillo<br>Header image based on image from <a href="http://thecodelesscode.com/">TheCodelessCode</a>, under the <a href="https://creativecommons.org/licenses/by-nc/3.0/deed.en_US">CC BY-NC 3.0</a><br>Share buttons from <a href="http://iconsandcoffee.com/freebie-flat-web-icon-set/">iconsandcoffee.com</a></footer></div>
 </div>
 </body>
 </html>

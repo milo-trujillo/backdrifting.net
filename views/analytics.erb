@@ -1,0 +1,20 @@
+<link href="/styles/markdown.css" rel="stylesheet" type="text/css">
+<div class="markdown">
+<h2>Site Analytics</h2>
+<table style="width:100%">
+<col width="80%">
+<col width="20%">
+<tr><th>Page</th><th>Hits</th></tr>
+<% for page in pagehits.keys.sort { |a, b| pagehits[a].to_i <=> pagehits[b].to_i }.reverse %>
+	<tr><td><%= page %></td><td><%= pagehits[page] %></td></tr>
+<% end %>
+</table>
+<table style="width:100%">
+<col width="80%">
+<col width="20%">
+<tr><th>Referrer</th><th>Hits</th></tr>
+<% for ref in referrers.keys.sort { |a, b| referrers[a].to_i <=> referrers[b].to_i }.reverse %>
+	<tr><td><%= ref %></td><td><%= referrers[ref] %></td></tr>
+<% end %>
+</table>
+</div>

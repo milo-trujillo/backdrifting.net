@@ -4,19 +4,51 @@ require 'sinatra'
 require 'tilt/erb'
 require 'kramdown'
 
-#$renderer = Redcarpet::Render::HTML.new()
-#$markdown = Redcarpet::Markdown.new($renderer, extensions = {})
 Private = File.dirname(__FILE__) + "/private"
 PostsDir = Private + "/posts"
 PreviewDir = Private + "/preview"
 PreviewPassword = ""
-PostSeparator = "\n<hr>\n"
+PostSeparator = "\n<center><hr></center>\n"
+SiteName = ""
+SiteURL = ""
 Description = "Digital Haven"
 FeedSize = 10 # How many posts to put in the RSS
+AnalyticsEnabled = false
+AnalyticsDatabaseURL = "redis://127.0.0.1:6379/"
+AnalyticsPassword = ""
 
 before '*' do
 	if( request.url.start_with?("http://") )
 		redirect to (request.url.sub("http", "https"))
+	end
+end
+
+if AnalyticsEnabled
+	require 'redis'
+	require 'uri'
+	redis = Redis.new(url: AnalyticsDatabaseURL, password: AnalyticsPassword)
+	# Save some minimal analytics for every page hit
+	after '*' do
+		page = URI.parse(request.url).request_uri[1..-1]
+		# We don't care about counting the 'about' and 'contact' hits
+		# Just engagement for each post
+		unless( page.start_with?("post/") )
+			pass
+		end
+		ref = request.referer
+		redis.multi do
+			redis.hincrby("pagehits", page, 1)
+			# If there's a referrer that's not us, record it
+			if( ref.nil? == false and not ref.start_with?(SiteURL) )
+				redis.hincrby("referrers", ref, 1)
+			end
+		end
+	end
+	# And add an access panel for that data
+	get '/analytics/' + PreviewPassword do
+		pagehits = redis.hgetall("pagehits")
+		referrers = redis.hgetall("referrers")
+		erb :analytics, :locals => {:pagehits => pagehits, :referrers => referrers}
 	end
 end
 
@@ -34,7 +66,7 @@ end
 def getMarkdown(filename)
 	begin
 		f = File.open(Private + "/" + filename, "r")
-		md = Kramdown::Document.new(f.read).to_html
+		md = Kramdown::Document.new(f.read, {coderay_line_numbers: nil}).to_html
 		f.close
 		return md
 	rescue
@@ -56,11 +88,12 @@ def renderPost(postfilename)
 		return text
 	end
 
+	encodedURL = ERB::Util.url_encode(SiteURL + "/post/")
 	share = <<SHARE_END
 <ul class="share-buttons">
-  <li><a href="https://twitter.com/intent/tweet?share=https%3A%2F%2Fbackdrifting.net%2Fpost%2F#{postname}" target="_blank" title="Tweet"><img src="/share/twitter.png" width=24px></a></li>
-  <li><a href="http://www.reddit.com/submit?url=https%3A%2F%2Fbackdrifting.net%2Fpost%2F#{postname}&title=Backdrifting" target="_blank" title="Submit to Reddit"><img src="/share/reddit.png" width=24px></a></li>
-  <li><a href="mailto:?subject=Backdrifting&body=https%3A%2F%2Fbackdrifting.net%2Fpost%2F#{postname}" target="_blank" title="Email"><img src="/share/email.png" width=24px></a></li>
+  <li><a href="https://twitter.com/intent/tweet?share=#{encodedURL}#{postname}" target="_blank" title="Tweet"><img src="/share/twitter.png" width=24px></a></li>
+  <li><a href="http://www.reddit.com/submit?url=#{encodedURL}#{postname}&title=Backdrifting" target="_blank" title="Submit to Reddit"><img src="/share/reddit.png" width=24px></a></li>
+  <li><a href="mailto:?subject=Backdrifting&body=#{encodedURL}#{postname}" target="_blank" title="Email"><img src="/share/email.png" width=24px></a></li>
   <li><a href="/post/#{postname}" target="_blank" title="Permalink"><img src="/share/pin.png" width=24px></a></li>
 </ul>
 SHARE_END
@@ -69,56 +102,51 @@ SHARE_END
 	return text
 end
 
+# Pre-load and render all posts
+$posts = Hash.new()
+posts = Dir.entries(PostsDir).select do |f| 
+	File.file?(PostsDir + "/" + f) and f.end_with?(".md")
+end
+for post in posts
+	$posts[post] = renderPost(post)
+end
+
+
+
+
 get '/' do
-	intro = getMarkdown("introduction.md")
 	text = ""
-	posts = Dir.entries(PostsDir).select do |f| 
-		File.file?(PostsDir + "/" + f) and f.end_with?(".md")
-	end
-	posts.sort! { |x, y| getPostNumber(x) <=> getPostNumber(y) }
+	posts = $posts.keys.sort { |x,y| getPostNumber(x) <=> getPostNumber(y) }
 	for post in posts.reverse[0..4]
-		text += (renderPost(post) + PostSeparator)
+		text += ($posts[post] + PostSeparator)
 	end
-	erb :frontpage, :locals => { :intro => intro, :text => text }
+	erb :frontpage, :locals => { :text => text }
 end
 
 get '/allPosts' do
 	text = ""
-	posts = Dir.entries(PostsDir).select do |f| 
-		File.file?(PostsDir + "/" + f) and f.end_with?(".md")
-	end
-	posts.sort! { |x, y| getPostNumber(x) <=> getPostNumber(y) }
+	posts = $posts.keys.sort { |x,y| getPostNumber(x) <=> getPostNumber(y) }
 	for post in posts.reverse
 		text += (renderPost(post) + PostSeparator)
 	end
 	erb :markdown, :locals => { :text => text }
 end
 
-get '/secretPreviews/:password' do |password|
-	pause = rand(0.0 .. 1.0)
-	sleep(pause)
-	if( password == PreviewPassword )
-		text = ""
-		posts = Dir.entries(PreviewDir).select do |f| 
-			File.file?(PreviewDir + "/" + f) and f.end_with?(".md")
-		end
-		for post in posts.reverse
-			text += (getMarkdown("preview/" + post) + "\n<hr>\n")
-		end
-		erb :markdown, :locals => { :text => text }
-	else
-		return "ACCESS DENIED"
+get '/secretPreviews/' + PreviewPassword do
+	text = ""
+	posts = Dir.entries(PreviewDir).select do |f| 
+		File.file?(PreviewDir + "/" + f) and f.end_with?(".md")
 	end
+	for post in posts.sort.reverse
+		text += (getMarkdown("preview/" + post) + "\n<hr>\n")
+	end
+	erb :markdown, :locals => { :text => text }
 end
 
 get '/archive' do
-	filenames = Dir.entries(PostsDir).select do |f|
-		File.file?(PostsDir + "/" + f) and f.end_with?(".md")
-	end
-	filenames.sort! { |x, y| getPostNumber(x) <=> getPostNumber(y) }
-	filenames.reverse! # Put newest posts on top
+	filenames = $posts.keys.sort { |x,y| getPostNumber(x) <=> getPostNumber(y) }
 	posts = []
-	for file in filenames
+	for file in filenames.reverse
 		firstLine = File.open("#{PostsDir}/#{file}", "r"){ |f| f.readline }
 		articleName = firstLine.gsub("#", "")
 		posts.push([File.basename(file, ".md"), articleName])
@@ -130,20 +158,22 @@ get '/post/:name' do |name|
 	if( name =~ /[^A-Za-z0-9_]/ )
 		halt 404
 	end
-	if( File.exists?(PostsDir + "/" + name + ".md") )
-		erb :markdown, :locals => { :text => renderPost(name + ".md") }
+	postName = name + ".md"
+	if( $posts.keys.include?(postName) )
+		erb :markdown, :locals => { :text => $posts[postName] }
 	else
 		halt 404
 	end
 end
 
 get '/rss' do
+	content_type "text/xml"
 	xml = <<END_XML
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0">
 <channel>
-<title>Backdrifting</title>
-<link>https://www.backdrifting.net/</link>
+<title>#{SiteName}</title>
+<link>#{SiteURL}</link>
 <description>#{Description}</description>
 END_XML
 	posts = Dir.entries(PostsDir).select do |f|
@@ -159,11 +189,12 @@ END_XML
 			#name = File.basename(posts[i], ".md")
 			# TODO: Cache the post names or something so we don't read all the
 			# files *twice* to make the RSS feed
+			url = posts[i].sub(".md","")
 			name = File.open("#{PostsDir}/#{posts[i]}", "r"){ |f| f.readline.gsub("#", "") }
 			contents = getMarkdown("posts/" + posts[i])
 			xml += "<item>\n"
 			xml += "<title>#{name}</title>\n"
-			xml += "<link>backdrifting.net/post/#{name}</link>\n"
+			xml += "<link>#{SiteURL}/post/#{url}</link>\n"
 			xml += "<description><![CDATA[#{contents}]]></description>\n"
 			xml += "</item>\n"
 		rescue

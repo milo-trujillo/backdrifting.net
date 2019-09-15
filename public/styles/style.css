@@ -1,4 +1,5 @@
 @charset "utf-8";
+/*@import url("/fonts/cmun-bright.css");*/
 
 html {
 	overflow-y: scroll;
@@ -9,71 +10,47 @@ body {
 	height:100%;
 	padding: 0px;
 	margin: 0px;
-	background-color: #000000; /* Controls background / side color */
-	font-family: 'Open Sans', sans-serif;
+	background-color: #FFFFFF; /* Controls background / side color */
+	/*font-family: 'Open Sans', sans-serif;*/
+	font-family: 'Lora', serif;
+	/*font-family: "Computer Modern Bright";*/
+	/*font-family: 'Sanchez', serif;
+	font-size: 13px;*/
+	line-height: 18px;
 }
 
-.container {
+#container {
 	width: 100%;
 	height: 100%;
-	min-height: 100%;
-	position:absolute;
+	min-height: calc(100vh - 60px); /* Fill screen, leave room for footer */
+	position:relative;
 }
-.header {
-	height: 60px;
+#header {
+	height: 80px;
 	width: 1000px;
 	margin-left: auto;
 	margin-right: auto;
+	margin-top: 20px;
+	margin-bottom: 20px;
 	background-color: #ffffff; /* Controls navbar color */
-	margin-bottom: 0px;
 	padding: 0px;
 	position: relative;
+	text-align: center;
 }
 .header_wrapper {
-	/*background-color: #28C3C0;*/
-	width: 60%;
-	margin: 0 auto;
-	font-family: 'Open Sans', sans-serif;
-	line-height: 20px;
+	font-family: 'Lora', serif;
+	font-style: italic;
+	line-height: 22px;
+	letter-spacing: -1px;
 	font-size: 15px;
-}
-.header_nav {
-	max-width: 60%;
-	float:right;
-	padding-right: 30px;
-	display:inline-block;
-	position:relative;
-}
-.navlinks {
-	list-style-type: none;
-	display: inline;
-	text-decoration: none;
-	color: #94948c;
 	word-spacing: 30px;
+	border-top: 1px solid #94948c;
+	border-bottom: 1px solid #94948c;
+	color: #94948c;
 }
-.navlink {
-	display: inline-block;
-	-webkit-transform: translateZ(0);
-	transform: translateZ(0);
-	box-shadow: 0 0 1px rgba(0, 0, 0, 0);
-	-webkit-backface-visibility: hidden;
-	backface-visibility: hidden;
-	-moz-osx-font-smoothing: grayscale;
-	position: relative;
-	line-height: 120%;
-}
-.navlink:hover:before, .navlink:focus:before, .navlink:active:before {
-	left: 0;
-	right: 0;
-}
-.navlink a:hover {
+
+.header_wrapper a:hover {
 	color: #000000;
-}
-.navactive {
-	display: inline-block;
-	vertical-align: middle;
-	color: #FFFFFF;
-	border-bottom: 2px solid #FFF;
 }
 
 a {
@@ -82,9 +59,8 @@ a {
 }
 
 /* Affects main content on every page */
-.stage {
+#stage {
 	width: 1000px;
-	height: auto !important;
 	min-height: 100%; /* Removing this will make stage only cover content */
 	margin-left: auto;
 	margin-right: auto;
@@ -93,15 +69,16 @@ a {
 	padding:0px;
 	background-color: #FFFFFF;
 	position:relative; /* Needed to keep footer centered */
+	/*box-shadow: 0 0px 80px 0 rgba(255, 0, 0, 1.0);*/
 }
-.stage hr {
+#stage hr {
     margin: 0 0 20px;
     border: 0;
     border-bottom: 1px solid #ccc;
 }
 
-.stage-data {
-	padding-bottom:60px; /* Size of footer */
+#stage-data {
+	padding-bottom:70px; /* Size of footer */
 }
 
 /* Makes text big and shiny */
@@ -133,18 +110,29 @@ ul.share-buttons li{
 	margin-right: 20px;
 }
 
-.footer {
+#sidebar {
+	width: 200px;
+	float: left;
+	position: relative;
+	text-align: justify;
+	font-size: 12px;
+	margin: 10px 32px 10px 16px;
+}
+
+#sidebar img {
+	margin: 0 auto;
+	display:block;
+}
+
+#footer {
 	text-align:center;
 	/*padding-top: 20px; 
 	padding-bottom: 20px; */
 	margin: auto;
 	font-size:12px;
 	position:absolute;
-	bottom:0px;
+	bottom:0;
 	width:100%;
 	height:50px; 
-}
-
-.footer a {
-	color: #446D6D;
+	padding-bottom: 10px;
 }
