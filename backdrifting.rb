@@ -3,6 +3,7 @@
 require 'sinatra'
 require 'tilt/erb'
 require 'kramdown'
+require 'kramdown-syntax-coderay'
 
 Private = File.dirname(__FILE__) + "/private"
 PostsDir = Private + "/posts"
@@ -12,6 +13,9 @@ PostSeparator = "\n<center><hr></center>\n"
 SiteName = ""
 SiteURL = ""
 Description = "Digital Haven"
+SiteDomains = ["example.com", "www.example.com"]
+TwitterHandle = "@foo"
+SocialMediaImageURL = "/images/qr.png"
 FeedSize = 10 # How many posts to put in the RSS
 AnalyticsEnabled = false
 AnalyticsDatabaseURL = "redis://127.0.0.1:6379/"
@@ -29,17 +33,17 @@ if AnalyticsEnabled
 	redis = Redis.new(url: AnalyticsDatabaseURL, password: AnalyticsPassword)
 	# Save some minimal analytics for every page hit
 	after '*' do
+		pass if( status == 404 )
 		page = URI.parse(request.url).request_uri[1..-1]
-		# We don't care about counting the 'about' and 'contact' hits
-		# Just engagement for each post
-		unless( page.start_with?("post/") )
-			pass
-		end
 		ref = request.referer
 		redis.multi do
-			redis.hincrby("pagehits", page, 1)
+			# We don't care about counting the 'about' and 'contact' hits
+			# Just engagement for each post
+			if( page.start_with?("post/") )
+				redis.hincrby("pagehits", page, 1)
+			end
 			# If there's a referrer that's not us, record it
-			if( ref.nil? == false and not ref.start_with?(SiteURL) )
+			if( ref.nil? == false and not SiteDomains.include?(URI.parse(ref).host) )
 				redis.hincrby("referrers", ref, 1)
 			end
 		end
@@ -66,12 +70,16 @@ end
 def getMarkdown(filename)
 	begin
 		f = File.open(Private + "/" + filename, "r")
-		md = Kramdown::Document.new(f.read, {coderay_line_numbers: nil}).to_html
+		md = Kramdown::Document.new(f.read, {:syntax_highlighter=>:coderay, :syntax_highlighter_opts=>{:line_numbers=>nil}}).to_html
 		f.close
 		return md
 	rescue
 		return ""
 	end
+end
+
+def getTitleFromPostHTML(html)
+	return html.match(/>(.+)</)[1]
 end
 
 # To sort posts numerically we need to get their number
@@ -81,12 +89,21 @@ def getPostNumber(filename)
 end
 
 # Renders the markdown for a post and generates appropriate 'sharing' buttons
+# Also adds metadata tags so social media will make a cute preview
 def renderPost(postfilename)
 	postname = File.basename(postfilename, ".md")
 	text = getMarkdown("posts/" + postfilename)
+	title = getTitleFromPostHTML(text)
 	if( text.length == 0 ) # No post, so don't add the share buttons
 		return text
 	end
+
+	header = <<METADATA_END
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:site" content="#{TwitterHandle}" />
+<meta name="twitter:title" content="#{title}" />
+<meta name="twitter:image" content="#{SiteURL + SocialMediaImageURL}" />
+METADATA_END
 
 	encodedURL = ERB::Util.url_encode(SiteURL + "/post/")
 	share = <<SHARE_END
@@ -98,6 +115,7 @@ def renderPost(postfilename)
 </ul>
 SHARE_END
 
+	text = header + text
 	text += share
 	return text
 end
