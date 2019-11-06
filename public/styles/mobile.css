@@ -1,0 +1,18 @@
+body {
+	overflow-x:hidden;
+}
+
+#header {
+	width:100%;
+}
+
+#stage,
+#mobile-stage {
+	width: 100%;
+}
+
+#sidebar {
+	float: none;
+	margin: 0 auto;
+	display:block;
+}

@@ -4,6 +4,8 @@ require 'sinatra'
 require 'tilt/erb'
 require 'kramdown'
 require 'kramdown-syntax-coderay'
+require 'rack/mobile-detect'
+use Rack::MobileDetect
 
 Private = File.dirname(__FILE__) + "/private"
 PostsDir = Private + "/posts"
@@ -12,10 +14,10 @@ PreviewPassword = ""
 PostSeparator = "\n<center><hr></center>\n"
 SiteName = ""
 SiteURL = ""
-Description = "Digital Haven"
 SiteDomains = ["example.com", "www.example.com"]
 TwitterHandle = "@foo"
 SocialMediaImageURL = "/images/qr.png"
+Description = "Digital Haven"
 FeedSize = 10 # How many posts to put in the RSS
 AnalyticsEnabled = false
 AnalyticsDatabaseURL = "redis://127.0.0.1:6379/"
@@ -24,6 +26,11 @@ AnalyticsPassword = ""
 before '*' do
 	if( request.url.start_with?("http://") )
 		redirect to (request.url.sub("http", "https"))
+	end
+	if( env.key?("X_MOBILE_DEVICE") )
+		@layout = :layout_mobile
+	else
+		@layout = :layout
 	end
 end
 
@@ -52,19 +59,19 @@ if AnalyticsEnabled
 	get '/analytics/' + PreviewPassword do
 		pagehits = redis.hgetall("pagehits")
 		referrers = redis.hgetall("referrers")
-		erb :analytics, :locals => {:pagehits => pagehits, :referrers => referrers}
+		erb :analytics, :locals => {:pagehits => pagehits, :referrers => referrers}, :layout => @layout
 	end
 end
 
 # Make all requests to non-existant pages give our 404 page
 error Sinatra::NotFound do
-	erb :notfound
+	erb :notfound, :layout => @layout
 end
 
 # And do the same if one of our functions throws a 404
 not_found do
 	status 404
-	erb :notfound
+	erb :notfound, :layout => @layout
 end
 
 def getMarkdown(filename)
@@ -138,16 +145,25 @@ get '/' do
 	for post in posts.reverse[0..4]
 		text += ($posts[post] + PostSeparator)
 	end
-	erb :frontpage, :locals => { :text => text }
+	erb :frontpage, :locals => { :text => text }, :layout => @layout
+end
+
+get '/mobiletest' do
+	text = ""
+	posts = $posts.keys.sort { |x,y| getPostNumber(x) <=> getPostNumber(y) }
+	for post in posts.reverse[0..4]
+		text += ($posts[post] + PostSeparator)
+	end
+	erb :frontpage, :locals => { :text => text }, :layout => :layout_mobile
 end
 
 get '/allPosts' do
 	text = ""
 	posts = $posts.keys.sort { |x,y| getPostNumber(x) <=> getPostNumber(y) }
 	for post in posts.reverse
-		text += (renderPost(post) + PostSeparator)
+		text += ($posts[post] + PostSeparator)
 	end
-	erb :markdown, :locals => { :text => text }
+	erb :markdown, :locals => { :text => text }, :layout => @layout
 end
 
 get '/secretPreviews/' + PreviewPassword do
@@ -158,7 +174,7 @@ get '/secretPreviews/' + PreviewPassword do
 	for post in posts.sort.reverse
 		text += (getMarkdown("preview/" + post) + "\n<hr>\n")
 	end
-	erb :markdown, :locals => { :text => text }
+	erb :markdown, :locals => { :text => text }, :layout => @layout
 end
 
 get '/archive' do
@@ -169,7 +185,7 @@ get '/archive' do
 		articleName = firstLine.gsub("#", "")
 		posts.push([File.basename(file, ".md"), articleName])
 	end
-	erb :archive, :locals => { :posts => posts }
+	erb :archive, :locals => { :posts => posts }, :layout => @layout
 end
 
 get '/post/:name' do |name|
@@ -178,7 +194,7 @@ get '/post/:name' do |name|
 	end
 	postName = name + ".md"
 	if( $posts.keys.include?(postName) )
-		erb :markdown, :locals => { :text => $posts[postName] }
+		erb :markdown, :locals => { :text => $posts[postName] }, :layout => @layout
 	else
 		halt 404
 	end
@@ -225,10 +241,10 @@ end
 
 get '/contact' do
 	md = getMarkdown("contact.md")
-	erb :markdown, :locals => { :text => md }
+	erb :markdown, :locals => { :text => md }, :layout => @layout
 end
 
 get '/about' do
 	md = getMarkdown("about.md")
-	erb :markdown, :locals => { :text => md }
+	erb :markdown, :locals => { :text => md }, :layout => @layout
 end
