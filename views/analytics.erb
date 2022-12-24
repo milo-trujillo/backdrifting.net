@@ -1,20 +1,28 @@
 <link href="/styles/markdown.css" rel="stylesheet" type="text/css">
 <div class="markdown">
 <h2>Site Analytics</h2>
-<table style="width:100%">
+<table style="width:100%; table-layout:fixed">
+<colgroup>
 <col width="80%">
 <col width="20%">
+</colgroup>
 <tr><th>Page</th><th>Hits</th></tr>
 <% for page in pagehits.keys.sort { |a, b| pagehits[a].to_i <=> pagehits[b].to_i }.reverse %>
-	<tr><td><%= page %></td><td><%= pagehits[page] %></td></tr>
+	<% if page.length == 0 %>
+		<tr><td style="word-wrap:break-word"><a href="/<%= page %>">INDEX</a></td><td><%= pagehits[page] %></td></tr>
+	<% else %>
+		<tr><td style="word-wrap:break-word"><a href="/<%= page %>"><%= page %></a></td><td><%= pagehits[page] %></td></tr>
+	<% end %>
 <% end %>
 </table>
-<table style="width:100%">
+<table style="width:100%; table-layout:fixed">
+<colgroup>
 <col width="80%">
 <col width="20%">
+</colgroup>
 <tr><th>Referrer</th><th>Hits</th></tr>
 <% for ref in referrers.keys.sort { |a, b| referrers[a].to_i <=> referrers[b].to_i }.reverse %>
-	<tr><td><%= ref %></td><td><%= referrers[ref] %></td></tr>
+	<tr><td style="word-wrap:break-word"><%= ref %></td><td><%= referrers[ref] %></td></tr>
 <% end %>
 </table>
 </div>

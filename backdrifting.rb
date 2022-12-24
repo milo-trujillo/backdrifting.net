@@ -1,5 +1,6 @@
 #!/usr/local/bin/ruby
 # encoding: UTF-8
+require 'time'
 require 'sinatra'
 require 'tilt/erb'
 require 'kramdown'
@@ -7,10 +8,12 @@ require 'kramdown-syntax-coderay'
 require 'rack/mobile-detect'
 use Rack::MobileDetect
 
+Public = File.dirname(__FILE__) + "/public"
 Private = File.dirname(__FILE__) + "/private"
 PostsDir = Private + "/posts"
 PreviewDir = Private + "/preview"
 PreviewPassword = ""
+ShareablePreviewPassword = ""
 PostSeparator = "\n<center><hr></center>\n"
 SiteName = ""
 SiteURL = ""
@@ -18,13 +21,22 @@ SiteDomains = ["example.com", "www.example.com"]
 TwitterHandle = "@foo"
 SocialMediaImageURL = "/images/qr.png"
 Description = "Digital Haven"
+Author = ""
 FeedSize = 10 # How many posts to put in the RSS
+ForceTLS = false # Apache/nginx may already do this with a redirect
 AnalyticsEnabled = false
 AnalyticsDatabaseURL = "redis://127.0.0.1:6379/"
 AnalyticsPassword = ""
 
+SiteMetaData = <<METADATA_END
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:site" content="#{TwitterHandle}" />
+<meta name="twitter:title" content="#{Description}" />
+<meta name="twitter:image" content="#{SiteURL + SocialMediaImageURL}" />
+METADATA_END
+
 before '*' do
-	if( request.url.start_with?("http://") )
+	if( ForceTLS and request.url.start_with?("http://") )
 		redirect to (request.url.sub("http", "https"))
 	end
 	if( env.key?("X_MOBILE_DEVICE") )
@@ -46,8 +58,9 @@ if AnalyticsEnabled
 		redis.multi do
 			# We don't care about counting the 'about' and 'contact' hits
 			# Just engagement for each post
-			if( page.start_with?("post/") )
-				redis.hincrby("pagehits", page, 1)
+			if( page.start_with?("post/") or page.length == 0 )
+				realpage = page.split("?")[0] # Strip "?fbclid=AksASF..."
+				redis.hincrby("pagehits", realpage, 1)
 			end
 			# If there's a referrer that's not us, record it
 			if( ref.nil? == false and not SiteDomains.include?(URI.parse(ref).host) )
@@ -59,7 +72,7 @@ if AnalyticsEnabled
 	get '/analytics/' + PreviewPassword do
 		pagehits = redis.hgetall("pagehits")
 		referrers = redis.hgetall("referrers")
-		erb :analytics, :locals => {:pagehits => pagehits, :referrers => referrers}, :layout => @layout
+		erb :analytics, :locals => {:pagetitle => "#{SiteName} Analytics", :pagehits => pagehits, :referrers => referrers}, :layout => @layout
 	end
 end
 
@@ -74,6 +87,9 @@ not_found do
 	erb :notfound, :layout => @layout
 end
 
+#
+# Helper functions for rendering posts
+#
 def getMarkdown(filename)
 	begin
 		f = File.open(Private + "/" + filename, "r")
@@ -85,8 +101,18 @@ def getMarkdown(filename)
 	end
 end
 
+# Extracts first <h2> tag, strips inner html (like italics)
 def getTitleFromPostHTML(html)
-	return html.match(/>(.+)</)[1]
+	return html.match(/<h2[^>]*>(.+)<\/h2>/)[1].gsub(/<[^>]*>/, "")
+end
+
+def getDateFromPostHTML(html)
+	string = html.match(/>Posted (.+)/)[1]
+	m,d,y = string.split("/").map {|f| f.to_i}
+	if( y < 2000 )
+		y += 2000
+	end
+	return Time.new(y, m, d).to_s
 end
 
 # To sort posts numerically we need to get their number
@@ -106,6 +132,7 @@ def renderPost(postfilename)
 	end
 
 	header = <<METADATA_END
+<div id="blogpost">
 <meta name="twitter:card" content="summary" />
 <meta name="twitter:site" content="#{TwitterHandle}" />
 <meta name="twitter:title" content="#{title}" />
@@ -122,30 +149,39 @@ METADATA_END
 </ul>
 SHARE_END
 
-	text = header + text
-	text += share
-	return text
+	footer = "</div>" # Ends "blogpost"
+
+	renderedPost = header + text + footer + share
+	return renderedPost
 end
 
+#
 # Pre-load and render all posts
+#
 $posts = Hash.new()
+$postTitles = Hash.new()
+$postDates = Hash.new()
 posts = Dir.entries(PostsDir).select do |f| 
 	File.file?(PostsDir + "/" + f) and f.end_with?(".md")
 end
 for post in posts
 	$posts[post] = renderPost(post)
+	$postTitles[post] = getTitleFromPostHTML($posts[post])
+	$postDates[post] = getDateFromPostHTML($posts[post])
 end
-
-
-
+$allposts = ""
+$frontpage = ""
+posts = $posts.keys.sort { |x,y| getPostNumber(x) <=> getPostNumber(y) }
+posts.reverse.each_with_index do |post, i|
+	if( i < 5 )
+		$frontpage += ($posts[post] + PostSeparator)
+	end
+	$allposts += ($posts[post] + PostSeparator)
+end
+$topicmap = File.read(Public+"/topicmap.svg")
 
 get '/' do
-	text = ""
-	posts = $posts.keys.sort { |x,y| getPostNumber(x) <=> getPostNumber(y) }
-	for post in posts.reverse[0..4]
-		text += ($posts[post] + PostSeparator)
-	end
-	erb :frontpage, :locals => { :text => text }, :layout => @layout
+	erb :frontpage, :locals => { :text => $frontpage, :pagetitle => "#{SiteName}: #{Author}'s Cyber-Nest", :pagedescription => Description, :sitemetadata => SiteMetaData }, :layout => @layout
 end
 
 get '/mobiletest' do
@@ -157,13 +193,26 @@ get '/mobiletest' do
 	erb :frontpage, :locals => { :text => text }, :layout => :layout_mobile
 end
 
-get '/allPosts' do
-	text = ""
-	posts = $posts.keys.sort { |x,y| getPostNumber(x) <=> getPostNumber(y) }
-	for post in posts.reverse
-		text += ($posts[post] + PostSeparator)
+# Generate a sitemap to improve coverage by search engines
+get '/robots.txt' do
+	content_type 'text/plain'
+	return "Sitemap: #{SiteURL}/sitemap.txt\nUser-agent: *\nAllow: /"
+end
+get '/sitemap.txt' do
+	content_type 'text/plain'
+	map  = "#{SiteURL}/\n"
+	map += "#{SiteURL}/about\n"
+	map += "#{SiteURL}/contact\n"
+	map += "#{SiteURL}/archive\n"
+	for post in $posts.keys
+		# Remember to strip the ".md" off the end
+		map += "#{SiteURL}/post/#{post[0..-4]}\n"
 	end
-	erb :markdown, :locals => { :text => text }, :layout => @layout
+	return map
+end
+
+get '/allPosts' do
+	erb :markdown, :locals => { :text => $allposts, :pagetitle => "All #{Author}'s Posts", :pagedescription => "Every blog post on one page" }, :layout => @layout
 end
 
 get '/secretPreviews/' + PreviewPassword do
@@ -171,21 +220,44 @@ get '/secretPreviews/' + PreviewPassword do
 	posts = Dir.entries(PreviewDir).select do |f| 
 		File.file?(PreviewDir + "/" + f) and f.end_with?(".md")
 	end
+	hdr = "<div id=\"blogpost\">\n"
+	ftr = "</div>\n<hr>\n"
 	for post in posts.sort.reverse
-		text += (getMarkdown("preview/" + post) + "\n<hr>\n")
+		postname = post.split(".")[0]
+		share = <<ENDSHARE
+<ul class="share-buttons">
+  <li><a href="/secretPreviews/#{ShareablePreviewPassword}/#{postname}" target="_blank" title="Permalink"><img src="/share/pin.png" width=24px></a></li>
+</ul>
+ENDSHARE
+		text += hdr + getMarkdown("preview/" + post) + share + ftr
 	end
 	erb :markdown, :locals => { :text => text }, :layout => @layout
+end
+
+get '/secretPreviews/' + ShareablePreviewPassword + '/:name' do |name|
+	posts = Dir.entries(PreviewDir).select do |f| 
+		File.file?(PreviewDir + "/" + f) and f.end_with?(".md")
+	end
+	if( posts.include?(name + ".md") )
+		hdr = "<div id=\"blogpost\">\n"
+		ftr = "</div>\n<hr>\n"
+		text = hdr + getMarkdown("preview/" + name + ".md") + ftr
+		erb :markdown, :locals => { :text => text }, :layout => @layout
+	else
+		halt 404
+	end
 end
 
 get '/archive' do
 	filenames = $posts.keys.sort { |x,y| getPostNumber(x) <=> getPostNumber(y) }
 	posts = []
 	for file in filenames.reverse
-		firstLine = File.open("#{PostsDir}/#{file}", "r"){ |f| f.readline }
-		articleName = firstLine.gsub("#", "")
-		posts.push([File.basename(file, ".md"), articleName])
+		articleName = $postTitles[file]
+		#articleDate = Time.parse($postDates[file]).strftime("%m/%d/%y")
+		articleDate = Time.parse($postDates[file]).strftime("%b %d, %Y")
+		posts.push([articleDate, File.basename(file, ".md"), articleName])
 	end
-	erb :archive, :locals => { :posts => posts }, :layout => @layout
+	erb :archive, :locals => { :posts => posts, :topicmap => $topicmap, :pagetitle => "Archive of #{Author}'s Posts", :pagedescription => "An index of all blog posts" }, :layout => @layout
 end
 
 get '/post/:name' do |name|
@@ -194,7 +266,7 @@ get '/post/:name' do |name|
 	end
 	postName = name + ".md"
 	if( $posts.keys.include?(postName) )
-		erb :markdown, :locals => { :text => $posts[postName] }, :layout => @layout
+		erb :post, :locals => { :text => $posts[postName], :pagetitle => $postTitles[postName], :pagedescription => $postTitles[postName], :post_date => $postDates[postName], :author_name => Author, :site_url => SiteURL }, :layout => @layout
 	else
 		halt 404
 	end
@@ -241,10 +313,17 @@ end
 
 get '/contact' do
 	md = getMarkdown("contact.md")
-	erb :markdown, :locals => { :text => md }, :layout => @layout
+	erb :markdown, :locals => { :text => md, :pagetitle => "Contact #{Author}", :pagedescription => "Contact #{Author}" }, :layout => @layout
 end
 
 get '/about' do
 	md = getMarkdown("about.md")
-	erb :markdown, :locals => { :text => md }, :layout => @layout
+	erb :about, :locals => { :text => md, :pagetitle => "About #{Author}", :pagedescription => "Bio and profile of #{Author}" }, :layout => @layout
+end
+
+get '/publications' do
+	pubs = getMarkdown("publications.md")
+	lecs = getMarkdown("lectures.md")
+	media = getMarkdown("media.md")
+	erb :publications, :locals => { :publications => pubs, :lectures => lecs, :media => media, :pagetitle => "#{Author}'s Publications", :pagedescription => "Publications of #{Author}" }, :layout => @layout
 end
