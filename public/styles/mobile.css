@@ -1,8 +1,14 @@
-body {
-	overflow-x:hidden;
+html {
+	overflow-y: scroll;
+	-webkit-overflow-scrolling: touch;
 }
 
-img {
+body {
+	overflow-x:hidden;
+	overflow-y:hidden;
+}
+
+img,svg {
 	max-width: 100%;
 }
 
@@ -16,7 +22,14 @@ img {
 }
 
 #sidebar {
-	float: none;
 	margin: 0 auto;
 	display:block;
+}
+
+.floatleft {
+	float: none;
+}
+
+.floatright {
+	float: none;
 }

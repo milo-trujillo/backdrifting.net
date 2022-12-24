@@ -12,6 +12,9 @@
 	margin-left: 20px;
 	margin-right: 20px;
 }
+.markdown blockquote, p:not(:last-child) {
+    padding-bottom: 0.7em;
+}
 .markdown body {
     font-family: "Helvetica Neue", Helvetica, "Hiragino Sans GB", Arial, sans-se
 rif;
@@ -35,9 +38,8 @@ rif;
 }
 
 .markdown a {
-    /*color: #0069d6;*/
 	color: rgb(0, 3, 5);
-	text-shadow: 0px 0px 1px rgb(40, 40, 40);
+	text-shadow: 0px 0px 1px rgb(40, 40, 40);*/
 	outline: 0;
 	border-radius: 5px 5px 5px 5px;
 }
@@ -47,14 +49,22 @@ rif;
     text-decoration: none;
 	*/
 	background-color: rgb(140, 140, 140);
-	/*color: #fff;*/
 	text-decoration: none;
 	/*text-shadow: 1px 0px 0.5px rgb(15, 15, 15);*/
+}
+@media (prefers-color-scheme: dark) {
+	.markdown a {
+		color: rgb(200, 200, 190);
+		text-shadow: 0px 0px 1px rgb(210, 210, 200);
+	}
+	.markdown a:hover {
+		color: #FFAF5C;
+	}
 }
 .markdown a img {
     border: none;
 }
-.markdown p,ol,ul {
+.markdown p,ol,ul,table {
     margin-bottom: 9px;
     font-size: 14px;
 }
@@ -64,7 +74,6 @@ rif;
 .markdown h4,
 .markdown h5,
 .markdown h6 {
-    color: #404040;
     line-height: 36px;
 	padding-bottom: 10px;
 }
@@ -101,7 +110,8 @@ rif;
     padding: 13px 13px 21px 15px;
     margin-bottom: 18px;
     font-family:georgia,serif;
-    font-style: italic;
+    /*font-style: italic;*/
+	border-left: 5px solid #eee;
 }
 .markdown blockquote:before {
     content:"\201C";
@@ -115,14 +125,12 @@ rif;
     font-weight: 300;
     line-height: 18px;
     margin-bottom: 0;
-    font-style: italic;
+    /*font-style: italic;*/
 }
 .markdown code, pre {
     font-family: Monaco, Andale Mono, Courier New, monospace;
 }
 .markdown code {
-    background-color: #fee9cc;
-    color: rgba(0, 0, 0, 0.75);
     padding: 1px 3px;
     font-size: 12px;
     -webkit-border-radius: 3px;
@@ -135,18 +143,26 @@ rif;
 .markdown pre {
     display: block;
     padding: 14px;
-    margin: 0 0 18px;
+    /*margin: 0 0 18px;*/
     line-height: 16px;
     font-size: 11px;
     border: 1px solid #d9d9d9;
     white-space: pre-wrap;
     word-wrap: break-word;
+	max-width: 930px;
+	margin-left: auto;
+	margin-right: auto;
 }
 .markdown pre code {
-    background-color: #fff;
-    color:#737373;
+	color: #000000;
     font-size: 11px;
     padding: 0;
+}
+@media (prefers-color-scheme: dark) {
+	.markdown pre {
+		-webkit-filter: invert(100%);
+		filter: invert(100%);
+	}
 }
 .markdown sup {
     font-size: 0.83em;

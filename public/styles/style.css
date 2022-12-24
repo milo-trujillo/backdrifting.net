@@ -1,16 +1,11 @@
 @charset "utf-8";
 /*@import url("/fonts/cmun-bright.css");*/
 
-html {
-	overflow-y: scroll;
-}
-
 body {
 	width:100%;
 	height:100%;
 	padding: 0px;
 	margin: 0px;
-	background-color: #FFFFFF; /* Controls background / side color */
 	/*font-family: 'Open Sans', sans-serif;*/
 	font-family: 'Lora', serif;
 	/*font-family: "Computer Modern Bright";*/
@@ -32,7 +27,6 @@ body {
 	margin-right: auto;
 	margin-top: 20px;
 	margin-bottom: 20px;
-	background-color: #ffffff; /* Controls navbar color */
 	padding: 0px;
 	position: relative;
 	text-align: center;
@@ -58,6 +52,10 @@ a {
 	text-decoration: inherit;
 }
 
+h1, h2, h3, h4, h5, h6 {
+    color: #404040;
+}
+
 /* Affects main content on every page */
 #stage {
 	width: 1000px;
@@ -67,14 +65,28 @@ a {
 	margin-bottom:0px;
 	margin-top:0px;
 	padding:0px;
-	background-color: #FFFFFF;
 	position:relative; /* Needed to keep footer centered */
 	/*box-shadow: 0 0px 80px 0 rgba(255, 0, 0, 1.0);*/
 }
-#stage hr {
-    margin: 0 0 20px;
+hr {
+    margin-bottom: 20px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 5px;
     border: 0;
     border-bottom: 1px solid #ccc;
+}
+
+#blogpost hr {
+	border-bottom: 1px dashed;
+}
+
+#blogpost img, object {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+	margin-bottom: 10px;
+	max-width: 100%;
 }
 
 #stage-data {
@@ -106,22 +118,35 @@ ul.share-buttons li{
 
 /* ID, not a class */
 #rss {
+	position: relative;
 	float: right;
 	margin-right: 20px;
+	z-index: 1;
+}
+
+.floatleft {
+	float: left;
+}
+
+.floatright {
+	float: right;
 }
 
 #sidebar {
 	width: 200px;
-	float: left;
 	position: relative;
 	text-align: justify;
 	font-size: 12px;
-	margin: 10px 32px 10px 16px;
+	margin: 10px 32px 10px 20px;
 }
 
 #sidebar img {
 	margin: 0 auto;
 	display:block;
+}
+
+.shadowbox {
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 #footer {
@@ -135,4 +160,56 @@ ul.share-buttons li{
 	width:100%;
 	height:50px; 
 	padding-bottom: 10px;
+}
+
+object {
+	max-width: 100%;
+}
+
+.archive table {
+	border: hidden;
+}
+
+.archive td {
+	border: hidden;
+}
+
+.markdown .archive td {
+	border: hidden;
+}
+
+.archive td:nth-child(1) {
+	font-family: monospace;
+}
+
+/* Darkmode */
+@media (prefers-color-scheme: dark) {
+	#rss, object, svg {
+		-webkit-filter: invert(100%); /* safari 6.0 - 9.0 */
+		        filter: invert(100%);
+	}
+
+	img {
+		opacity: .75; /* soft on eyes unless hover */
+		transition: opacity .5s ease-in-out;
+	}
+
+	img:hover {
+		opacity 1;
+	}
+
+	p, h1, h2, h3, h4, h5, h6, th, tr, td, li {
+		color: rgb(255, 255, 255); 
+		mix-blend-mode: difference;
+	}
+
+	/*body {background-color: rgb(54, 57, 63);}*/
+	body {background-color: rgb(41, 43, 47);}
+
+	ul li {color: white;}
+	#footer {color:white;}
+
+	a:hover, .header_wrapper a:hover {
+		color: #FFAF5C;
+	}
 }

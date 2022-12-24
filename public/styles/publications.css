@@ -1,0 +1,36 @@
+.publications hr {
+    margin-top: 15px;
+    margin-bottom: 15px;
+    width: 90%;
+    border: 0;
+    border-bottom: 1px dashed #ccc;
+}
+
+.publications h2 {
+	margin-top: 20px;
+	margin-bottom: 20px;
+}
+
+.publications h3 {
+	line-height: 95%;
+	margin-top: -10px;
+	margin-bottom: -5px;
+}
+
+.publications h4 {
+	line-height: 95%;
+	margin-top: 0px;
+	margin-bottom: 0px;
+}
+
+.publications p {
+	margin-top: 0px;
+	margin-bottom: 0px;
+	padding-bottom: 0.2em;
+}
+
+.publications blockquote:before { content: none; }
+
+.publications blockquote {
+    padding: 13px 13px 0px 15px;
+}
