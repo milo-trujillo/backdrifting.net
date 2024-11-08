@@ -1,6 +1,7 @@
 #!/usr/local/bin/ruby
 # encoding: UTF-8
 require 'time'
+require 'date'
 require 'sinatra'
 require 'tilt/erb'
 require 'kramdown'
@@ -14,7 +15,8 @@ PostsDir = Private + "/posts"
 PreviewDir = Private + "/preview"
 PreviewPassword = ""
 ShareablePreviewPassword = ""
-PostSeparator = "\n<center><hr></center>\n"
+#PostSeparator = "\n<center><hr></center>\n"
+PostSeparator = "\n<br />\n"
 SiteName = ""
 SiteURL = ""
 SiteDomains = ["example.com", "www.example.com"]
@@ -22,7 +24,6 @@ TwitterHandle = "@foo"
 SocialMediaImageURL = "/images/qr.png"
 Description = "Digital Haven"
 Author = ""
-FeedSize = 10 # How many posts to put in the RSS
 ForceTLS = false # Apache/nginx may already do this with a redirect
 AnalyticsEnabled = false
 AnalyticsDatabaseURL = "redis://127.0.0.1:6379/"
@@ -58,8 +59,9 @@ if AnalyticsEnabled
 		redis.multi do
 			# We don't care about counting the 'about' and 'contact' hits
 			# Just engagement for each post
-			if( page.start_with?("post/") or page.length == 0 )
+			if( page.start_with?("post/") )
 				realpage = page.split("?")[0] # Strip "?fbclid=AksASF..."
+				realpage = CGI::unescape(realpage) # %5f -> _
 				redis.hincrby("pagehits", realpage, 1)
 			end
 			# If there's a referrer that's not us, record it
@@ -142,10 +144,7 @@ METADATA_END
 	encodedURL = ERB::Util.url_encode(SiteURL + "/post/")
 	share = <<SHARE_END
 <ul class="share-buttons">
-  <li><a href="https://twitter.com/intent/tweet?share=#{encodedURL}#{postname}" target="_blank" title="Tweet"><img src="/share/twitter.png" width=24px></a></li>
-  <li><a href="http://www.reddit.com/submit?url=#{encodedURL}#{postname}&title=Backdrifting" target="_blank" title="Submit to Reddit"><img src="/share/reddit.png" width=24px></a></li>
-  <li><a href="mailto:?subject=Backdrifting&body=#{encodedURL}#{postname}" target="_blank" title="Email"><img src="/share/email.png" width=24px></a></li>
-  <li><a href="/post/#{postname}" target="_blank" title="Permalink"><img src="/share/pin.png" width=24px></a></li>
+  <li><a href="/post/#{postname}" target="_blank" title="Permalink">Permalink</a></li>
 </ul>
 SHARE_END
 
@@ -282,25 +281,20 @@ get '/rss' do
 <link>#{SiteURL}</link>
 <description>#{Description}</description>
 END_XML
-	posts = Dir.entries(PostsDir).select do |f|
-		File.file?(PostsDir + "/" + f) and f.end_with?(".md")
-	end
-	posts.sort! { |x, y| getPostNumber(x) <=> getPostNumber(y) }
-	posts.reverse! # Put newest posts on top
-	for i in (0 .. 10)
-		if( i >= posts.size )
-			break
-		end
+	posts = $posts.keys.sort { |x,y| getPostNumber(x) <=> getPostNumber(y) }
+	posts.reverse.each_with_index do |postname, i|
 		begin
-			#name = File.basename(posts[i], ".md")
+			name = File.basename(posts[i], ".md")
 			# TODO: Cache the post names or something so we don't read all the
 			# files *twice* to make the RSS feed
-			url = posts[i].sub(".md","")
-			name = File.open("#{PostsDir}/#{posts[i]}", "r"){ |f| f.readline.gsub("#", "") }
-			contents = getMarkdown("posts/" + posts[i])
+			url = postname.sub(".md","")
+			name = $postTitles[postname]
+			contents = $posts[postname]
+			date = Date.strptime($postDates[postname]).rfc2822()
 			xml += "<item>\n"
 			xml += "<title>#{name}</title>\n"
 			xml += "<link>#{SiteURL}/post/#{url}</link>\n"
+			xml += "<pubDate>#{date}</pubDate>\n"
 			xml += "<description><![CDATA[#{contents}]]></description>\n"
 			xml += "</item>\n"
 		rescue
@@ -322,8 +316,9 @@ get '/about' do
 end
 
 get '/publications' do
-	pubs = getMarkdown("publications.md")
-	lecs = getMarkdown("lectures.md")
-	media = getMarkdown("media.md")
-	erb :publications, :locals => { :publications => pubs, :lectures => lecs, :media => media, :pagetitle => "#{Author}'s Publications", :pagedescription => "Publications of #{Author}" }, :layout => @layout
+	acpubs = getMarkdown("academic.md").split("<hr />")
+	nonpubs = getMarkdown("nonpeerreviewed.md").split("<hr />")
+	lecs = getMarkdown("lectures.md").split("<hr />")
+	media = getMarkdown("media.md").split("<hr />")
+	erb :publications, :locals => { :academic => acpubs, :nonpeerreviewed => nonpubs, :lectures => lecs, :media => media, :pagetitle => "#{Author}'s Publications", :pagedescription => "Publications of #{Author}" }, :layout => @layout
 end
