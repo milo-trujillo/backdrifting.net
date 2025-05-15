@@ -4,6 +4,7 @@ require 'time'
 require 'date'
 require 'sinatra'
 require 'tilt/erb'
+require 'pathname'
 require 'kramdown'
 require 'kramdown-syntax-coderay'
 require 'rack/mobile-detect'
@@ -94,8 +95,12 @@ end
 #
 def getMarkdown(filename)
 	begin
+		# Attach a prefix to auto-generated hyperlinks like footnotes,
+		# so that a page containing multiple posts with footnotes won't have
+		# any conflicts
+		prefix = Pathname.new(filename).basename.to_s.split(".")[0] + "_"
 		f = File.open(Private + "/" + filename, "r")
-		md = Kramdown::Document.new(f.read, {:syntax_highlighter=>:coderay, :syntax_highlighter_opts=>{:line_numbers=>nil}}).to_html
+		md = Kramdown::Document.new(f.read, {:footnote_prefix=>prefix, :syntax_highlighter=>:coderay, :syntax_highlighter_opts=>{:line_numbers=>nil}}).to_html
 		f.close
 		return md
 	rescue
