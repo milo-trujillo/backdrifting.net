@@ -1,35 +1,53 @@
 <link href="/styles/markdown.css" rel="stylesheet" type="text/css">
 <link href="/styles/publications.css" rel="stylesheet" type="text/css">
 
-<h2>Publications</h2>
+<style>
+</style>
+
+<h2>Publications, Public Speaking, and Media Mentions</h2>
 <hr>
 
 <div class="publications">
 <div class="markdown">
-<%= publications %>
-</div>
-</div>
+
+<h2>Peer Reviewed Academic Work</h2>
+
+<% for pub in academic %>
+	<div class="box">
+	<details>
+	<%= pub %>
+	</details>
+	</div>
+<% end %>
 
 <br/>
+<h2>Non-Peer Reviewed</h2>
+<% for pub in nonpeerreviewed %>
+	<div class="box">
+	<details>
+	<%= pub %>
+	</details>
+	</div>
+<% end %>
 
+<br/>
 <h2>Lectures and Public Speaking</h2>
-<hr>
 
-<div class="publications">
-<div class="markdown">
-<%= lectures %>
-</div>
-</div>
+<% for lec in lectures %>
+	<div class="box">
+	<details>
+	<%= lec %>
+	</details>
+	</div>
+<% end %>
 
 <br/>
-
 <h2>Mentions in Media</h2>
-<hr>
 
-<div class="publications">
-<div class="markdown">
-<%= media %>
-</div>
-</div>
-
-
+<% for mention in media %>
+	<div class="box">
+	<details>
+	<%= mention %>
+	</details>
+	</div>
+<% end %>

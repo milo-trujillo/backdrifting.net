@@ -108,6 +108,11 @@ def getMarkdown(filename)
 	end
 end
 
+# Publications have a specific format and require some parsing and tag substitution
+def getPublications(filename)
+	return getMarkdown(filename).gsub("<h4", "<summary><h4").gsub("</h4>", "</h4></summary>").split("<hr />")
+end
+
 # Extracts first <h2> tag, strips inner html (like italics)
 def getTitleFromPostHTML(html)
 	return html.match(/<h2[^>]*>(.+)<\/h2>/)[1].gsub(/<[^>]*>/, "")
@@ -321,9 +326,9 @@ get '/about' do
 end
 
 get '/publications' do
-	acpubs = getMarkdown("academic.md").split("<hr />")
-	nonpubs = getMarkdown("nonpeerreviewed.md").split("<hr />")
-	lecs = getMarkdown("lectures.md").split("<hr />")
-	media = getMarkdown("media.md").split("<hr />")
+	acpubs = getPublications("academic.md")
+	nonpubs = getPublications("nonpeerreviewed.md")
+	lecs = getPublications("lectures.md")
+	media = getPublications("media.md")
 	erb :publications, :locals => { :academic => acpubs, :nonpeerreviewed => nonpubs, :lectures => lecs, :media => media, :pagetitle => "#{Author}'s Publications", :pagedescription => "Publications of #{Author}" }, :layout => @layout
 end

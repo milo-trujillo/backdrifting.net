@@ -6,11 +6,6 @@
     border-bottom: 1px dashed #ccc;
 }
 
-.publications h2 {
-	margin-top: 20px;
-	margin-bottom: 20px;
-}
-
 .publications h3 {
 	line-height: 95%;
 	margin-top: -10px;
@@ -21,6 +16,7 @@
 	line-height: 95%;
 	margin-top: 0px;
 	margin-bottom: 0px;
+	font-size: 14px;
 }
 
 .publications p {
@@ -33,4 +29,129 @@
 
 .publications blockquote {
     padding: 13px 13px 0px 15px;
+}
+
+.publications h2 {
+	margin-top: 20px;
+	border: 1.5px solid #151517;
+	border-radius: 4px;
+	color: #fff;
+	background: #000;
+	line-height: 1.3;
+	font-size: 1.25rem;
+	margin-top: 0;
+	margin-bottom: 2.0rem;
+	padding: 0.5rem;
+}
+
+.publications h2::before {
+	background: #fff;
+	display: inline-block;
+	content: "";
+	height: 2px;
+	vertical-align: super;
+	width: 85px;
+	margin-right: 5px;
+}
+
+.publications .box {
+	border: 1px solid #151517;
+	border-radius: 12px;
+	position: relative;
+	margin-bottom: 1.0rem;
+	vertical-align: super;
+	margin-left: 20px;
+	margin-right: 20px;
+}
+
+.publications .box h4 {
+	margin-left: 0px;
+	margin-right: 0px;
+	padding-top: 0.5rem;
+	padding-left: 20px;
+	padding-right: 20px;
+	background: #eee;
+	border-top-left-radius: 12px;
+	border-top-right-radius: 12px;
+	border-bottom-left-radius: 12px;
+	border-bottom-right-radius: 12px;
+}
+
+.publications details .box h4 {
+}
+
+.publications details[open] h4 {
+	border-bottom: 1px solid #151517;
+	margin-bottom: 0.5rem;
+	border-bottom-left-radius: 0px;
+	border-bottom-right-radius: 0px;
+}
+
+.publications summary {
+	/* Hide normal triangle marker */
+	list-style: none;
+
+	/* Pin the custom marker to the container */
+	position: relative;
+	/* Register summary as an anchor element */
+	anchor-name: --summary;
+
+	&::marker {
+		content: "";
+	}
+  
+	&::before,
+	&::after {
+		/* Custom marker dimensions */
+		content: "";
+		border-block-start: 3px solid black;
+		@media (prefers-color-scheme: dark) {
+			border-block-start: 3px solid white;
+		}
+		height: 0;
+		width: 1rem;
+		  
+		/* Positions the lines */
+		inset-block-start: 50%;
+		inset-inline-end: 0;
+			
+		/* Anchor the shape to the summary */
+		position: absolute;
+		position-anchor: --summary;
+		position-area: top end;
+		margin-right: 10px;
+	}
+  
+	/* Rotate just the ::after line to create a "+"" shape */
+	&::after {
+		transform: rotate(90deg);
+		transform-origin: 50%;
+	}
+}
+
+/* Rotate the line when open */
+.publications details[open] summary::after {
+	transform: rotate(0deg);
+}
+
+/* Darkmode */
+@media (prefers-color-scheme: dark) {
+	.publications h2 {
+		isolation: isolate; /* Ignore bg color when inverting text color */
+		color: #000;
+		background: #fff;
+	}
+
+	.publications h2::before {
+		background: #000;
+	}
+
+	.publications .box {
+		border: 1px solid #eaeae8;
+	}
+
+	.publications .box h4 {
+		border-bottom: 1px solid #eaeae8;
+		background: #111111;
+	}
 }
