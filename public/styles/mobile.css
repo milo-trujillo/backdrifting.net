@@ -33,3 +33,7 @@ img,svg {
 .floatright {
 	float: none;
 }
+
+.about ul {
+	columns: 1 auto;
+}
