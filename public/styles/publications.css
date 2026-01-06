@@ -88,6 +88,9 @@
 }
 
 .publications summary {
+	/* Make mouse cursor hint that this is clickable */
+	cursor: pointer;
+
 	/* Hide normal triangle marker */
 	list-style: none;
 
