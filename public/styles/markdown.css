@@ -24,8 +24,7 @@
     margin: 10px 13px 10px 13px;
 }
 .markdown table {
-    margin: 10px 0 15px 0;
-	margin-left: 20px;
+    margin: 10px 20px 15px 0;
     border-collapse: collapse;
 }
 .markdown td,th { 
@@ -126,9 +125,7 @@
     margin-bottom: 0;
     /*font-style: italic;*/
 }
-.markdown code, pre {
-    font-family: Monaco, Andale Mono, Courier New, monospace;
-}
+/*
 .markdown code {
     padding: 1px 3px;
     font-size: 12px;
@@ -136,13 +133,13 @@
     -moz-border-radius: 3px;
     border-radius: 3px;
 }
+*/
 .markdown .line-numbers {
 	margin-right: 10px;
 }
-.markdown pre {
+.markdown .CodeRay,.rouge-table {
     display: block;
-    padding: 14px;
-    /*margin: 0 0 18px;*/
+    padding: 7px;
     line-height: 16px;
     font-size: 11px;
     border: 1px solid #d9d9d9;
@@ -153,16 +150,42 @@
 	margin-left: auto;
 	margin-right: auto;
 }
-.markdown pre code {
+.rouge-table table, th, td {
+	border: none !important;
+	border-collapse: collapse;
+}
+.markdown pre {
+    font-family: Monaco, Andale Mono, Courier New, monospace;
+	margin-left: 20px;
+	margin-right: 20px;
+	display: block;
 	color: #000000;
     font-size: 11px;
     padding: 0;
 }
+.markdown table,pre .rouge-table {
+	margin-left: 0;
+	margin-right: 0;
+}
+.markdown pre .lineno {
+	margin-right: 5px;
+	color: #555555;
+}
 @media (prefers-color-scheme: dark) {
-	.markdown pre {
+	.markdown .CodeRay {
 		-webkit-filter: invert(100%);
 		filter: invert(100%);
     	border: 1px solid #262626;
+	}
+	/* For code blocks in syntax highlighting (needs higher specificity than the highlighter) */
+	.markdown .highlight code {
+		-webkit-filter: invert(100%);
+		filter: invert(100%);
+	}
+	/* For code blocks outside syntax highlighting */
+	.markdown pre {
+		-webkit-filter: invert(100%);
+		filter: invert(100%);
 	}
 }
 .markdown sup {

@@ -6,7 +6,6 @@ require 'sinatra'
 require 'tilt/erb'
 require 'pathname'
 require 'kramdown'
-require 'kramdown-syntax-coderay'
 require 'rack/mobile-detect'
 use Rack::MobileDetect
 
@@ -100,7 +99,7 @@ def getMarkdown(filename)
 		# any conflicts
 		prefix = Pathname.new(filename).basename.to_s.split(".")[0] + "_"
 		f = File.open(Private + "/" + filename, "r")
-		md = Kramdown::Document.new(f.read, {:footnote_prefix=>prefix, :syntax_highlighter=>:coderay, :syntax_highlighter_opts=>{:line_numbers=>nil}}).to_html
+		md = Kramdown::Document.new(f.read, {:footnote_prefix=>prefix, :syntax_highlighter=>:rouge, :syntax_highlighter_opts=>{:line_numbers=>:table,:tab_width=>4,:default_lang=>"text"}}).to_html
 		f.close
 		return md
 	rescue
