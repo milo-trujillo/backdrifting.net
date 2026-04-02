@@ -2,15 +2,13 @@
 require 'rack/cache'
 require './backdrifting'
 
-# Make Passenger play nice with Apache
-# Massively reduces page-load times in some environments
-if defined?(PhusionPassenger)
-	PhusionPassenger.advertised_concurrency_level = 0
-end
+set :env,  :production
 
 use Rack::Cache,
 	:verbose     => true,
 	:metastore   => 'file:/var/cache/rack/meta',
 	:entitystore => 'file:/var/cache/rack/body'
+	#:metastore   => 'file:tmp/meta',
+	#:entitystore => 'file:tmp/body'
 
 run Sinatra::Application
