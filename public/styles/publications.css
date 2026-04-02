@@ -77,9 +77,6 @@
 	border-bottom-right-radius: 12px;
 }
 
-.publications details .box h4 {
-}
-
 .publications details[open] h4 {
 	border-bottom: 1px solid #151517;
 	margin-bottom: 0.5rem;
