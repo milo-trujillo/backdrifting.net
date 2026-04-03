@@ -125,15 +125,6 @@
     margin-bottom: 0;
     /*font-style: italic;*/
 }
-/*
-.markdown code {
-    padding: 1px 3px;
-    font-size: 12px;
-    -webkit-border-radius: 3px;
-    -moz-border-radius: 3px;
-    border-radius: 3px;
-}
-*/
 .markdown .line-numbers {
 	margin-right: 10px;
 }
@@ -150,9 +141,8 @@
 	margin-left: auto;
 	margin-right: auto;
 }
-.rouge-table table, th, td {
-	border: none !important;
-	border-collapse: collapse;
+td.rouge-gutter, td.rouge-code {
+	border: none;
 }
 .markdown pre {
     font-family: Monaco, Andale Mono, Courier New, monospace;
